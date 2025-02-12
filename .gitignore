@@ -1,0 +1,15 @@
+.cpcache
+.packages
+target
+.nrepl-port
+shadow-target
+.shadow-cljs
+.DS_Store
+node_modules
+package-lock.json
+.lsp
+.clj-kondo
+.package
+test/fixtures
+.idea
+

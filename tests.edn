@@ -1,0 +1,14 @@
+#kaocha/v1
+{:tests [{:id          :unit
+          :test-paths  ["test"]
+          :ns-patterns [".*"]}]
+
+ :plugins                     [:kaocha.plugin/print-invocations
+                               :kaocha.plugin/profiling]
+
+ :fail-fast?                  false
+ :color?                      true
+ :reporter                    [kaocha.report/documentation]
+ :kaocha.plugin.randomize/randomize? true
+ :kaocha.plugin.profiling/profiling? true}
+
