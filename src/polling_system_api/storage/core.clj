@@ -1,0 +1,22 @@
+(ns polling-system-api.storage.core)
+
+;;
+;; data structure
+;; polls
+;; {:<poll-id> {:user-id <user_id>
+;;              :question <question>
+;;              :options 
+;;              {<option-id> option
+;;               ...}}
+;;  ...}
+;;
+;; votes
+;; {:<option-id> #{<user-id> ...}
+;;  ...}
+;;
+(defonce db {:users {"123adminkey" {:name "admin"
+                                    :admin? true}
+                     "123user1" {:name "user1"}
+                     "123user2" {:name "user2"}}
+             :polls (atom {})
+             :votes (atom {})})

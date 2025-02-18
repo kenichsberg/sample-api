@@ -1,34 +1,27 @@
 (ns polling-system-api.api.routes
   (:require [muuntaja.core]
+            [polling-system-api.api.middleware.core :as mw]
+            [polling-system-api.api.poll.core :as poll]
             [reitit.coercion.spec]
             [reitit.dev.pretty :as rp]
             [reitit.openapi :as openapi]
             [reitit.ring :as ring]
             [reitit.ring.coercion :as coercion]
+            [reitit.ring.middleware.exception :as exception]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.ring.spec :as rrs]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]))
 
+
 (defn router [{{meta :meta} :cfg
                #_#_:as          ctx}]
   (let [info {:title   (:product meta)
               :version (:version meta)}]
     (ring/router
-      [["/swagger.json"
-        {:get {:no-doc  true
-               :swagger {:info info}
-               :handler (swagger/create-swagger-handler)}}]
-       ["/openapi.json"
-        {:get {:no-doc true
-               :openapi {:info info}
-               :handler (openapi/create-openapi-handler)}}]
-
-       ["/api"
-        ;; Register context endpoints here
-
-        ]]
+      ["/api"
+       poll/api]
 
       {:validate  rrs/validate
        :exception rp/exception
@@ -37,7 +30,8 @@
                    :middleware [parameters/parameters-middleware
                                 muuntaja/format-negotiate-middleware
                                 muuntaja/format-response-middleware
-                                #_exception-middleware
+                                exception/exception-middleware
+                                mw/existing-user
                                 muuntaja/format-request-middleware
                                 coercion/coerce-response-middleware
                                 coercion/coerce-request-middleware]}})))
