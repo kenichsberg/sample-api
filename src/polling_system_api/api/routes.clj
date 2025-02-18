@@ -2,6 +2,7 @@
   (:require [muuntaja.core]
             [polling-system-api.api.middleware.core :as mw]
             [polling-system-api.api.poll.core :as poll]
+            [polling-system-api.api.option.core :as option]
             [reitit.coercion.spec]
             [reitit.dev.pretty :as rp]
             [reitit.openapi :as openapi]
@@ -21,7 +22,8 @@
               :version (:version meta)}]
     (ring/router
       ["/api"
-       poll/api]
+       poll/api
+       option/api]
 
       {:validate  rrs/validate
        :exception rp/exception

@@ -9,6 +9,7 @@
        (map-indexed 
          (fn [idx option] 
            (let [option-id (str (random-uuid))]
+             (repo.vote/new-vote! option-id)
              [option-id {:option option
                          :order idx}])))
        (into {})))

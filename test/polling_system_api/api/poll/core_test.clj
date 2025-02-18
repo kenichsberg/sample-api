@@ -110,6 +110,66 @@
              (-> options vals set)))))
 
 
+  (testing "poll result can be viewed"
+    (let [resp (app (-> (mock/request :get "/api/poll/foo")
+                        (mock/header "Authorization" "Bearer 123user1")))
+
+          {:keys [poll-id question options] :as body}
+          (parse-json (:body resp))]
+
+      (def _body-poll-result body)
+      (def option1-id (some (fn [[k v]] 
+                              (when (= 0 (:order v))
+                                (name k))) 
+                            options))
+      (is (= 200 (:status resp)))
+
+      (is (= "foo" poll-id))
+      (is (= "What is this?" question))
+      (is (= #{{:vote-count 0
+                :option "a dog"
+                :order 0}
+               {:vote-count 0
+                :option "a cat"
+                :order 1}
+               {:vote-count 0
+                :option "a hyena"
+                :order 2}}
+             (-> options vals set)))))
+
+
+  (testing "vote an option"
+    (let [resp (app (-> (mock/request :post (format "/api/option/%s" option1-id))
+                        (mock/header "Authorization" "Bearer 123user1")))
+          body (parse-json (:body resp))]
+      (def _body-vote body)
+      (is (= 200 (:status resp)))
+      (is (nil? body))))
+
+
+  (testing "poll result can be viewed"
+    (let [resp (app (-> (mock/request :get "/api/poll/foo")
+                        (mock/header "Authorization" "Bearer 123user1")))
+
+          {:keys [poll-id question options] :as body}
+          (parse-json (:body resp))]
+
+      (def _body-poll-result body)
+      (is (= 200 (:status resp)))
+
+      (is (= "foo" poll-id))
+      (is (= "What is this?" question))
+      (is (= #{{:vote-count 1
+                :option "a dog"
+                :order 0}
+               {:vote-count 0
+                :option "a cat"
+                :order 1}
+               {:vote-count 0
+                :option "a hyena"
+                :order 2}}
+             (-> options vals set)))))
+
 
   (testing "poll can be edited"
     (let [resp (app (-> (mock/request :put "/api/poll/foo")
