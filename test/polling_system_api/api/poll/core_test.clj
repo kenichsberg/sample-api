@@ -1,13 +1,12 @@
 (ns polling-system-api.api.poll.core-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [jsonista.core :as j]
             [polling-system-api.core :as root]
             [polling-system-api.storage.core :as storage]
-            [ring.mock.request :as mock])
-  (:import (java.io InputStream InputStreamReader BufferedReader)))
+            [polling-system-api.utils.test-utils :as utils]
+            [ring.mock.request :as mock]))
 
 
-(def app (root/app {}))
+(def app (root/app))
 
 
 (defn fixture-each [f]
@@ -16,32 +15,6 @@
   (f))
 
 (use-fixtures :each fixture-each)
-
-
-
-(defn try-parse-json [string]
-  (try
-    (j/read-value string j/keyword-keys-object-mapper)
-    (catch com.fasterxml.jackson.core.JsonParseException e
-      string)))
-
-(defn is->json->map [is]
-  (try
-    (some-> is
-            (InputStreamReader.)
-            (BufferedReader.)
-            .lines
-            (.collect (java.util.stream.Collectors/joining "\n"))
-            (try-parse-json))
-    (catch Exception e
-      (println ::is->json->map e))))
-
-(defn parse-json
-  [str-or-is]
-  (cond
-    (string? str-or-is) (try-parse-json str-or-is)
-    (instance? InputStream str-or-is) (is->json->map str-or-is)
-    :else str-or-is))
 
 
 
@@ -55,7 +28,7 @@
           #_#__ (def _resp resp)
 
           {:keys [poll-id question options] :as body}
-          (parse-json (:body resp))]
+          (utils/parse-json (:body resp))]
 
       (def _body body)
 
@@ -80,7 +53,7 @@
                         (mock/header "Authorization" "Bearer 123user1")))
 
           {:keys [poll-id question options] :as body}
-          (parse-json (:body resp))]
+          (utils/parse-json (:body resp))]
 
       (def _body-poll-result body)
       (def option1-id (some (fn [[k v]] 
@@ -106,7 +79,7 @@
   (testing "vote an option"
     (let [resp (app (-> (mock/request :post (format "/api/option/%s" option1-id))
                         (mock/header "Authorization" "Bearer 123user1")))
-          body (parse-json (:body resp))]
+          body (utils/parse-json (:body resp))]
       (def _body-vote body)
       (is (= 200 (:status resp)))
       (is (nil? body))))
@@ -117,7 +90,7 @@
                         (mock/header "Authorization" "Bearer 123user1")))
 
           {:keys [poll-id question options] :as body}
-          (parse-json (:body resp))]
+          (utils/parse-json (:body resp))]
 
       (def _body-poll-result body)
       (is (= 200 (:status resp)))
@@ -145,7 +118,7 @@
           #_#__ (def _resp-poll-edit resp)
 
           {:keys [poll-id question options] :as body}
-          (parse-json (:body resp))]
+          (utils/parse-json (:body resp))]
 
       (def _body-poll-edit body)
       (is (= 200 (:status resp)))
@@ -168,7 +141,7 @@
     (let [resp (app (-> (mock/request :delete "/api/poll/foo")
                         (mock/header "Authorization" "Bearer 123user1")))
           #_#__ (def _resp-poll-delete resp)
-          body (parse-json (:body resp))]
+          body (utils/parse-json (:body resp))]
 
       (def _body-poll-delete body)
       (is (= 200 (:status resp)))
@@ -193,7 +166,7 @@
                                          :options ["a dog" "a cat" "a hyena"]})))
           #_#__ (def _resp resp)
 
-          body (parse-json (:body resp))]
+          body (utils/parse-json (:body resp))]
 
       (def _body-cpup-id-conflict body)
 
@@ -209,7 +182,7 @@
                                              :options ["a dog" "a cat" "a hyena"]})))
               #_#__ (def _resp resp)
 
-              body (parse-json (:body resp))]
+              body (utils/parse-json (:body resp))]
 
           (def _body-cpup-validation1 body)
 
@@ -222,7 +195,7 @@
                                              :options ["a dog" "a cat" "a hyena"]})))
               #_#__ (def _resp resp)
 
-              body (parse-json (:body resp))]
+              body (utils/parse-json (:body resp))]
 
           (def _body-cpup-validation2 body)
 
@@ -235,7 +208,7 @@
                                              :question "What is this?"})))
               #_#__ (def _resp resp)
 
-              body (parse-json (:body resp))]
+              body (utils/parse-json (:body resp))]
 
           (def _body-cpup-validation3 body)
 
@@ -251,7 +224,7 @@
                                          :options ["a dog" "a cat" "a hyena"]})))
           #_#__ (def _resp resp)
 
-          body (parse-json (:body resp))]
+          body (utils/parse-json (:body resp))]
 
       (def _body-cpup-uu body)
 
@@ -275,7 +248,7 @@
                                            :options ["a dog" "a cat" "a hyena"]})))
             #_#__ (def _resp resp)
 
-            body (parse-json (:body resp))]
+            body (utils/parse-json (:body resp))]
 
         (def _body-epup-np body)
 
@@ -289,7 +262,7 @@
                                            :options ["a dog" "a cat" "a human"]})))
             #_#__ (def _resp resp)
 
-            body (parse-json (:body resp))]
+            body (utils/parse-json (:body resp))]
 
         (def _body-epup-pa body)
 
@@ -303,7 +276,7 @@
                             (mock/json-body {:question "What is this?"})))
               #_#__ (def _resp resp)
 
-              body (parse-json (:body resp))]
+              body (utils/parse-json (:body resp))]
 
           (def _body-epup-vl body)
 
@@ -317,7 +290,7 @@
                                              :options ["a dog" "a cat" "a human"]})))
               #_#__ (def _resp resp)
 
-              body (parse-json (:body resp))]
+              body (utils/parse-json (:body resp))]
 
           (def _body-epup-pi body)
 
@@ -341,7 +314,7 @@
                           (mock/header "Authorization" "Bearer 123user2")))
             #_#__ (def _resp resp)
 
-            body (parse-json (:body resp))]
+            body (utils/parse-json (:body resp))]
 
         (def _body-dpup-np body)
 
@@ -352,7 +325,7 @@
                           (mock/header "Authorization" "Bearer 123adminkey")))
             #_#__ (def _resp resp)
 
-            body (parse-json (:body resp))]
+            body (utils/parse-json (:body resp))]
 
         (def _body-dpup-pa body)
 

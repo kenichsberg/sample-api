@@ -6,6 +6,17 @@
 
 (defn vote 
   [{{{:keys [option-id]} :path} :parameters :as  req}]
-  (def _r req)
-  (repo.vote/vote-an-option option-id (auth/get-user-id req))
-  (http-response/ok))
+  (let [queue (repo.vote/get-vote-queue option-id)
+        user-id (auth/get-user-id req)]
+
+    (cond
+      (nil? queue)
+      (http-response/not-found (format "option-id '%s' not found" option-id))
+
+      (repo.vote/user-already-voted? queue user-id)
+      (http-response/unprocessable-entity "The same user already voted")
+
+      :else
+      (do
+        (repo.vote/vote-an-option queue user-id)
+        (http-response/ok)))))

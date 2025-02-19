@@ -38,17 +38,17 @@
             :responses {200 {:body ::poll-response}
                         422 {:body string?}}
             :handler h/create-poll}}]
-   ["/:poll-id" {:parameters {:path {:poll-id string?}}}
-    [""
-     {:get {:responses {200 {:body ::poll-response}
-                        404 {:body string?}}
-            :handler h/get-poll-result}
-      :put {:parameters {:body ::edit-poll-request}
-            :responses {200 {:body ::poll-response}
-                        403 {:body nil?}
-                        422 {:body string?}}
-            :handler h/update-poll}
-      :delete {:responses {200 {:body nil?}
-                           403 {:body nil?}
-                           404 {:body string?}}
-               :handler h/delete-poll}}]]])
+   ["/:poll-id"
+    {:parameters {:path {:poll-id string?}}
+     :get {:responses {200 {:body ::poll-response}
+                       404 {:body string?}}
+           :handler h/get-poll-result}
+     :put {:parameters {:body ::edit-poll-request}
+           :responses {200 {:body ::poll-response}
+                       403 {:body nil?}
+                       422 {:body string?}}
+           :handler h/update-poll}
+     :delete {:responses {200 {:body nil?}
+                          403 {:body nil?}
+                          404 {:body string?}}
+              :handler h/delete-poll}}]])

@@ -3,15 +3,17 @@
 ;;
 ;; data structure
 ;; polls
-;; {:<poll-id> {:user-id <user_id>
-;;              :question <question>
-;;              :options 
-;;              {<option-id> option
-;;               ...}}
+;; {<poll-id> {:user-id <user_id>
+;;             :question <question>
+;;             :options 
+;;             {<option-id> {:vote-count <int>
+;;                           :option <option>
+;;                           :rank <int>}
+;;              ...}}
 ;;  ...}
 ;;
 ;; votes
-;; {:<option-id> #{<user-id> ...}
+;; {<option-id> #{<user-id> ...}
 ;;  ...}
 ;;
 (defonce db {:users {"123adminkey" {:name "admin"

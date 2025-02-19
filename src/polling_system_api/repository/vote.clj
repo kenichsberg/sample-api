@@ -16,11 +16,14 @@
   (get @(:votes storage/db) option-id))
 
 
+(defn user-already-voted?
+  [^ConcurrentLinkedQueue queue user-id]
+  (.contains queue user-id))
+
+
 (defn vote-an-option
-  [opiton-id user-id]
-  (-> opiton-id
-      get-vote-queue
-      (.add user-id)))
+  [^ConcurrentLinkedQueue queue user-id]
+  (.add queue user-id))
 
 
 (defn get-vote-count

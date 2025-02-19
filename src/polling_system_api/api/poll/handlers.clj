@@ -25,22 +25,32 @@
   [{{{:keys [poll-id]} :path} :parameters
     poll-request :body-params
     :as req}]
-  (if-let [poll (repo.poll/read-poll poll-id)]
-    (if (user-permitted? req poll)
+  (let [poll (repo.poll/read-poll poll-id)]
+    (cond
+      (nil? poll) 
+      (http-response/not-found (format "poll-id '%s' was not found" poll-id))
+
+      (user-permitted? req poll)
       (http-response/ok (repo.poll/update-poll poll-id poll-request))
-      (http-response/forbidden))
-    (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
+
+      :else
+      (http-response/forbidden))))
 
 
 (defn delete-poll
   [{{{:keys [poll-id]} :path} :parameters :as req}]
-  (if-let [poll (repo.poll/read-poll poll-id)]
-    (if (user-permitted? req poll)
+  (let [poll (repo.poll/read-poll poll-id)]
+    (cond
+      (nil? poll)
+      (http-response/not-found (format "poll-id '%s' was not found" poll-id))
+
+      (user-permitted? req poll)
       (do
         (repo.poll/delete-poll poll-id)
         (http-response/ok))
-      (http-response/forbidden))
-    (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
+
+      :else
+      (http-response/forbidden))))
 
 
 (defn get-poll-result

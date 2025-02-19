@@ -7,7 +7,7 @@ endif
 
 
 test:
-	clj -M:test -m kaocha.runner
+	clj -M:test
 
 build:
 	clj -X:build uber

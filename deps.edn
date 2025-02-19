@@ -35,5 +35,5 @@
          :jvm-opts    ^:replace ["-XX:-OmitStackTraceInFastThrow"]
          :main-opts   ["-m" "kaocha.runner"]}
 
-  :run {:path ["src"]
-        :ns-dfault core}}}
+  #_#_:run {:path ["src"]
+        :ns-default core}}}
