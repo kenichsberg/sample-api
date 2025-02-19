@@ -10,6 +10,7 @@
          (fn [idx option] 
            (let [option-id (str (random-uuid))]
              (repo.vote/new-vote! option-id)
-             [option-id {:option option
-                         :order idx}])))
+             [option-id {:vote-count 0
+                         :option option
+                         :rank idx}])))
        (into {})))

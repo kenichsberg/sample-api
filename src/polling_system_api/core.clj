@@ -9,7 +9,7 @@
 (defn app [ctx]
   (ring/ring-handler
     (router ctx)
-    (ring/routes swagger (ring/create-default-handler))))
+    #_(ring/routes swagger (ring/create-default-handler))))
 
 (defn stop
   []
@@ -34,9 +34,7 @@
   (start {} (and port (Integer/parseInt port))))
 
 (comment
-  (def ctx (context/make))
-
-  (start {} nil)
+  (start {} 8080)
   (stop)
   )
 
