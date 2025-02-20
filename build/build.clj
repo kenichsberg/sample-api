@@ -17,18 +17,18 @@
                :target-dir class-dir})
 
   (b/compile-clj {:basis basis
-                  :src-dirs ["src"]
+                  :ns-compile ['polling-system-api.core] 
                   :class-dir class-dir})
 
   (b/uber {:class-dir class-dir
            :uber-file uber-file
            :basis     basis
-           :main      "polling-system-api.core"})
+           :main      'polling-system-api.core})
 
   :done)
 
 (comment
-  (clean)
+  (clean nil)
   (uber nil)
   )
 

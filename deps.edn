@@ -14,14 +14,15 @@
         ring/ring-mock                   {:mvn/version "0.4.0"}}
 
  :aliases
- {#_#_:build  {:paths       ["build"]
+ {:build  {:paths       ["build"]
            :extra-deps  {io.github.clojure/tools.build {:git/tag "v0.10.7" :git/sha "573711e"}}
            :ns-default  build}
 
   :nrepl {:extra-paths ["dev" "test" "build" "test/zrc" "benchmarks"]
           :extra-deps  {cider/cider-nrepl              {:mvn/version "0.52.0"}
                         nrepl/nrepl                    {:mvn/version "1.3.0"}
-                        refactor-nrepl/refactor-nrepl  {:mvn/version "3.10.0"}}
+                        refactor-nrepl/refactor-nrepl  {:mvn/version "3.10.0"}
+                        io.github.clojure/tools.build {:git/tag "v0.10.7" :git/sha "573711e"}}
           :jvm-opts ["-Djdk.attach.allowAttachSelf"]
           :main-opts   ["-e" "(set! *warn-on-reflection* true)"
                         "-m" "nrepl.cmdline"
