@@ -1,4 +1,4 @@
-(ns polling-system-api.storage.core)
+(ns polling-system-api.globals.storage)
 
 ;;
 ;; data structure
@@ -16,9 +16,13 @@
 ;; {<option-id> #{<user-id> ...}
 ;;  ...}
 ;;
-(defonce db {:users {"123adminkey" {:name "admin"
-                                    :admin? true}
-                     "123user1" {:name "user1"}
-                     "123user2" {:name "user2"}}
-             :polls (atom {})
-             :votes (atom {})})
+(def users 
+  {"123adminkey" {:name "admin"
+                  :admin? true}
+   "123user1" {:name "user1"}
+   "123user2" {:name "user2"}})
+
+(defonce db 
+  {:users users
+   :polls (atom {})
+   :votes (atom {})})

@@ -1,17 +1,23 @@
 (ns polling-system-api.repository.vote
-  (:require [polling-system-api.storage.core :as storage])
+  (:require [polling-system-api.globals.storage :as storage])
   (:import [java.util.concurrent ConcurrentLinkedQueue]))
 
 
-(defn new-vote!
-  [option-id]
+(defn add-vote
+  [poll-id option-id]
   (swap! (:votes storage/db)
          assoc
          option-id
-         (ConcurrentLinkedQueue.)))
+         {:poll-id poll-id
+          :queue (ConcurrentLinkedQueue.)}))
 
 
-(defn get-vote-queue ^ConcurrentLinkedQueue
+(defn remove-vote
+  [option-id]
+  (swap! (:votes storage/db) dissoc option-id))
+
+
+(defn get-vote-map
   [option-id]
   (get @(:votes storage/db) option-id))
 
@@ -29,5 +35,6 @@
 (defn get-vote-count
   [option-id]
   (-> option-id 
-      get-vote-queue
+      get-vote-map
+      :queue
       .size))

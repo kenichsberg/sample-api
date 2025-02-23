@@ -1,6 +1,7 @@
 (ns polling-system-api.repository.poll
   (:require [polling-system-api.repository.option :as repo.option]
-            [polling-system-api.storage.core :as storage]))
+            [polling-system-api.globals.channels :as channels]
+            [polling-system-api.globals.storage :as storage]))
 
 
 (defn- assoc-poll
@@ -27,7 +28,7 @@
 
 (defn create-poll 
   [user-id {:keys [poll-id question options] :as _poll}]
-  (let [options' (repo.option/create-options! options)]
+  (let [options' (repo.option/create-options! poll-id options)]
     (assoc-poll poll-id user-id question options')
     {:poll-id poll-id
      :question question
@@ -47,7 +48,7 @@
 
 (defn update-poll 
   [poll-id {:keys [question options] :as _poll}]
-  (let [options' (repo.option/create-options! options)]
+  (let [options' (repo.option/create-options! poll-id options)]
     (assoc-poll poll-id question options')
     {:poll-id poll-id
      :question question

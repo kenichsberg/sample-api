@@ -17,8 +17,8 @@
 (defn router []
   (ring/router
     ["/api"
-     poll/api
-     option/api]
+     (poll/api)
+     (option/api)]
 
     {:validate  rrs/validate
      :exception rp/exception

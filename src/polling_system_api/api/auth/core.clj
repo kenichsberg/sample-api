@@ -1,6 +1,6 @@
 (ns polling-system-api.api.auth.core
   (:require [clojure.string :as str]
-            [polling-system-api.storage.core :as storage]
+            [polling-system-api.globals.storage :as storage]
             [ring.util.http-response :as http-response]))
 
 

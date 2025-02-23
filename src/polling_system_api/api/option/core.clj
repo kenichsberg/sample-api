@@ -8,7 +8,7 @@
 ;; POST   /api/option/{option-id}   vote an option
 
 
-(def api
+(defn api []
   ["/option"
    ["/:option-id"
     {:parameters {:path {:option-id string?}}

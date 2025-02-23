@@ -9,6 +9,9 @@
     (j/read-value string j/keyword-keys-object-mapper)
     (catch com.fasterxml.jackson.core.JsonParseException e
       (println (.getMessage e))
+      string)
+    (catch com.fasterxml.jackson.databind.exc.MismatchedInputException e
+      (println (.getMessage e))
       string)))
 
 

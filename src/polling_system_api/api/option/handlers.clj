@@ -1,12 +1,14 @@
 (ns polling-system-api.api.option.handlers
-  (:require [polling-system-api.api.auth.core :as auth]
+  (:require [clojure.core.async :as a]
+            [polling-system-api.api.auth.core :as auth]
+            [polling-system-api.globals.channels :as channels]
             [polling-system-api.repository.vote :as repo.vote]
             [ring.util.http-response :as http-response]))
 
 
 (defn vote 
   [{{{:keys [option-id]} :path} :parameters :as  req}]
-  (let [queue (repo.vote/get-vote-queue option-id)
+  (let [{:keys [poll-id queue]} (repo.vote/get-vote-map option-id)
         user-id (auth/get-user-id req)]
 
     (cond
@@ -19,4 +21,6 @@
       :else
       (do
         (repo.vote/vote-an-option queue user-id)
+        (a/>!! channels/pub {:poll-id poll-id 
+                             :message :poll-changed})
         (http-response/ok)))))

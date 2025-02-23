@@ -1,7 +1,7 @@
 (ns polling-system-api.api.option.core-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [polling-system-api.core :as root]
-            [polling-system-api.storage.core :as storage]
+            [polling-system-api.globals.storage :as storage]
             [polling-system-api.utils.test-utils :as utils]
             [ring.mock.request :as mock]))
 

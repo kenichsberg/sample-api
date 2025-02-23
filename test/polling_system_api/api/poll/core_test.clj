@@ -1,7 +1,7 @@
 (ns polling-system-api.api.poll.core-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [polling-system-api.core :as root]
-            [polling-system-api.storage.core :as storage]
+            [polling-system-api.globals.storage :as storage]
             [polling-system-api.utils.test-utils :as utils]
             [ring.mock.request :as mock]))
 
@@ -76,23 +76,22 @@
              (-> options vals set)))))
 
 
-  (testing "vote an option"
-    (let [resp (app (-> (mock/request :post (format "/api/option/%s" option1-id))
-                        (mock/header "Authorization" "Bearer 123user1")))
-          body (utils/parse-json (:body resp))]
-      (def _body-vote body)
-      (is (= 200 (:status resp)))
-      (is (nil? body))))
-
-
-  (testing "vote count has changed"
-    (let [resp (app (-> (mock/request :get "/api/poll/foo")
-                        (mock/header "Authorization" "Bearer 123user1")))
+  (testing "vote count has changed (long-poll) "
+    (let [resp-result-fut (future (app (-> (mock/request :post "/api/poll/foo")
+                                           (mock/header "Authorization" "Bearer 123user1")
+                                           (mock/json-body {:wait-time-seconds 3}))))
+          ;; NOTE Fleaky without sleep (timing - vote can win)
+          _ (Thread/sleep 10)
+          resp-vote (app (-> (mock/request :post (format "/api/option/%s" option1-id))
+                             (mock/header "Authorization" "Bearer 123user1")))
+          _ (is (= 200 (:status resp-vote)))
+          resp @resp-result-fut
+          #_#__ (def _rrre resp)
 
           {:keys [poll-id question options] :as body}
           (utils/parse-json (:body resp))]
 
-      (def _body-poll-result body)
+      (def _body-long-poll-result body)
       (is (= 200 (:status resp)))
 
       (is (= "foo" poll-id))
@@ -112,8 +111,7 @@
   (testing "poll can be edited"
     (let [resp (app (-> (mock/request :put "/api/poll/foo")
                         (mock/header "Authorization" "Bearer 123user1")
-                        (mock/json-body {#_#_:poll-id ""
-                                         :question "What is that?"
+                        (mock/json-body {:question "What is that?"
                                          :options ["a dog" "a cat" "a human"]})))
           #_#__ (def _resp-poll-edit resp)
 
@@ -135,6 +133,7 @@
                 :option "a human"
                 :rank 2}}
              (-> options vals set)))))
+
 
 
   (testing "poll can be deleted"

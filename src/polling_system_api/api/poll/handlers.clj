@@ -1,8 +1,10 @@
 (ns polling-system-api.api.poll.handlers
-  (:require [polling-system-api.api.auth.core :as auth]
+  (:require [clojure.core.async :as a]
+            [polling-system-api.api.auth.core :as auth]
             [polling-system-api.repository.poll :as repo.poll]
-            [ring.util.http-response :as http-response]
-            [polling-system-api.repository.vote :as repo.vote]))
+            [polling-system-api.globals.channels :as channels]
+            [polling-system-api.repository.vote :as repo.vote]
+            [ring.util.http-response :as http-response]))
 
 
 (defn create-poll 
@@ -47,14 +49,16 @@
       (user-permitted? req poll)
       (do
         (repo.poll/delete-poll poll-id)
+        (doseq [[option-id _] (:options poll)]
+          (repo.vote/remove-vote option-id))
         (http-response/ok))
 
       :else
       (http-response/forbidden))))
 
 
-(defn get-poll-result
-  [{{{:keys [poll-id]} :path} :parameters :as  _req}]
+(defn- do-get-poll-result
+  [poll-id]
   (if-let [poll-info (repo.poll/read-poll-info poll-id)]
     (let [result (->> poll-info :options
                       (mapv (fn [[option-id option-map]]
@@ -63,3 +67,29 @@
                       (into {}))]
       (http-response/ok (assoc poll-info :options result)))
     (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
+
+
+(defn get-poll-result
+  [{{{:keys [poll-id]} :path} :parameters :as  _req}]
+  (do-get-poll-result poll-id))
+
+
+(defn subscribe-change [poll-id wait-time-seconds]
+  (let [wait-time-seconds' (if (< 20 wait-time-seconds) 20 wait-time-seconds)
+        sub-channel (a/chan 1) 
+        _ (a/sub channels/sub-root poll-id sub-channel)
+        timeout-ch (a/timeout (* wait-time-seconds' 1000))
+        ;; NOTE This blocks thread, but if we have virtual threads, it doesn't affect.
+        [msg _] (a/alts!! [sub-channel timeout-ch])]
+    (a/unsub channels/sub-root poll-id sub-channel)
+    (a/close! sub-channel)
+    msg))
+
+
+(defn wait-poll-result
+  [{{{:keys [poll-id]} :path} :parameters
+    {:keys [wait-time-seconds]} :body-params
+    :as  _req}]
+  (if (nil? (subscribe-change poll-id wait-time-seconds))
+    (http-response/no-content)
+    (do-get-poll-result poll-id)))
