@@ -3,9 +3,22 @@
   (:require [polling-system-api.api.routes :refer [router]]
             [reitit.ring :as ring]
             [ring.adapter.jetty :as jetty])
-  (:import (org.eclipse.jetty.server Server)))
+  (:import (java.util.concurrent Executors)
+           (org.eclipse.jetty.server Server)
+           (org.eclipse.jetty.util.thread QueuedThreadPool)))
 
 (defonce ^:private server-ref (atom nil))
+
+
+(defmacro compile-if
+  [test then else]
+  (if (try (eval test) (catch Throwable _ false))
+    `(do ~then)
+    `(do ~else)))
+
+(defn have-virtual-threads? []
+  (compile-if (Thread/ofVirtual) true false))
+
 
 (defn app []
   (ring/ring-handler
@@ -30,9 +43,16 @@
 (defn start [port]
   (stop)
 
-  (let [server (jetty/run-jetty (app) 
-                                {:port (or port 0)
-                                 :join? false})
+  (let [vthreads? (have-virtual-threads?)
+        thread-pool (when vthreads? (QueuedThreadPool.))
+        _ (when vthreads?
+            (.setVirtualThreadsExecutor thread-pool
+                                        (Executors/newVirtualThreadPerTaskExecutor)))
+        opts (cond-> {:port (or port 0)
+                      :join? false}
+               vthreads?
+               (assoc :thread-pool thread-pool))
+        server (jetty/run-jetty (app) opts)
         port-actual (-> server .getConnectors first .getLocalPort)]
     (reset! server-ref server)
     (println (format "Server has started on %s." port-actual))))
