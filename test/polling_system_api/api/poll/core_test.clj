@@ -329,6 +329,34 @@
 
         (def _body-dpup-pa body)
 
-        (is (= 200 (:status resp)))))
-    )
-  )
+        (is (= 200 (:status resp)))))))
+
+
+
+(deftest method-not-allowed
+  (testing ":get /api/poll -> 405"
+    (let [resp (app (-> (mock/request :get "/api/poll")
+                        (mock/header "Authorization" "Bearer 123user1")
+                        ))
+          _ (def _resp_405 resp)
+          body (utils/parse-json (:body resp))]
+
+      (def _body_405 body)
+
+      (is (= 405 (:status resp)))
+      (is (= "Method not allowed" body)))))
+
+
+
+(deftest route-not-found
+  (testing "404"
+    (let [resp (app (-> (mock/request :get "/api/foo/")
+                        (mock/header "Authorization" "Bearer 123user1")
+                        ))
+          _ (def _resp_404 resp)
+          body (utils/parse-json (:body resp))]
+
+      (def _body_404 body)
+
+      (is (= 404 (:status resp)))
+      (is (=  "Route not found" body)))))

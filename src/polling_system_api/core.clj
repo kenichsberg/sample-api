@@ -10,7 +10,14 @@
 (defn app []
   (ring/ring-handler
     (router)
-    #_(ring/routes swagger (ring/create-default-handler))))
+    (ring/routes 
+      (ring/create-default-handler
+        {:not-found (constantly {:status  404 
+                                 :body "Route not found"})
+         :method-not-allowed (constantly {:status  405
+                                          :body "Method not allowed"})
+         :not-acceptable (constantly {:status  406 
+                                      :body "Unacceptable"})}))))
 
 
 (defn stop []

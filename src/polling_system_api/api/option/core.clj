@@ -12,8 +12,7 @@
   ["/option"
    ["/:option-id"
     {:parameters {:path {:option-id string?}}
-     :post {:parameters {:body nil?}
-            :responses {200 {:body nil?}
+     :post {:responses {200 {:body nil?}
                         404 {:body string?}
                         422 {:body string?}}
             :handler h/vote}}]])

@@ -1,4 +1,5 @@
 (ns polling-system-api.api.routes
+  (:gen-class)
   (:require [muuntaja.core]
             [polling-system-api.api.middleware.core :as mw]
             [polling-system-api.api.poll.core :as poll]
