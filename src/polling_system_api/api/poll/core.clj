@@ -30,9 +30,9 @@
 (s/def ::poll-response
   (s/keys :req-un [::poll-id ::question :resp/options]))
 
-(s/def ::wait-time-seconds (s/and number? pos?))
+(s/def ::wait-time-seconds (s/and number? (s/or :pos pos? :zero zero?)))
 (s/def ::long-poll
-  (s/keys :req-un [::wait-time-seconds]))
+  (s/keys :opt-un [::wait-time-seconds]))
 
 
 (defn api []
@@ -44,14 +44,11 @@
             :handler h/create-poll}}]
    ["/:poll-id"
     {:parameters {:path {:poll-id string?}}
-     :get {:responses {200 {:body ::poll-response}
+     :get {:parameters {:query ::long-poll}
+           :responses {200 {:body ::poll-response}
+                       204 {:body string?}
                        404 {:body string?}}
            :handler h/get-poll-result}
-     :post {:parameters {:body ::long-poll}
-            :responses {200 {:body ::poll-response}
-                        204 {:body string?}
-                        404 {:body string?}}
-            :handler h/wait-poll-result}
      :put {:parameters {:body ::edit-poll-request}
            :responses {200 {:body ::poll-response}
                        403 {:body nil?}

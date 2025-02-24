@@ -49,7 +49,7 @@
 
 
   (testing "poll result can be viewed"
-    (let [resp (app (-> (mock/request :get "/api/poll/foo")
+    (let [resp (app (-> (mock/request :get "/api/poll/foo?wait-time-seconds=0")
                         (mock/header "Authorization" "Bearer 123user1")))
 
           {:keys [poll-id question options] :as body}
@@ -77,9 +77,8 @@
 
 
   (testing "vote count has changed (long-poll) "
-    (let [resp-result-fut (future (app (-> (mock/request :post "/api/poll/foo")
-                                           (mock/header "Authorization" "Bearer 123user1")
-                                           (mock/json-body {:wait-time-seconds 3}))))
+    (let [resp-result-fut (future (app (-> (mock/request :get "/api/poll/foo?wait-time-seconds=3")
+                                           (mock/header "Authorization" "Bearer 123user1"))))
           ;; NOTE Fleaky without sleep (timing - vote can win)
           _ (Thread/sleep 10)
           resp-vote (app (-> (mock/request :post (format "/api/option/%s" option1-id))
@@ -233,27 +232,10 @@
 
 (deftest get-poll
   (testing "non existent id"
-    (let [resp (app (-> (mock/request :get "/api/poll/non-exitent-id")
+    (let [resp (app (-> (mock/request :get "/api/poll/non-exitent-id?wait-time-seconds=3")
                         (mock/header "Authorization" "Bearer 123user1")))
           #_#__ (def _resp resp)
-
           body (utils/parse-json (:body resp))]
-
-      (def _body-gp body)
-
-      (is (= 404 (:status resp))))))
-
-
-
-(deftest wait-poll
-  (testing "non existent id"
-    (let [resp (app (-> (mock/request :post "/api/poll/non-exitent-id")
-                        (mock/header "Authorization" "Bearer 123user1")
-                        (mock/json-body {:wait-time-seconds 1})))
-          #_#__ (def _resp resp)
-
-          body (utils/parse-json (:body resp))]
-
       (def _body-wp body)
 
       (is (= 404 (:status resp)))))
@@ -266,13 +248,10 @@
                               :options ["a dog" "a cat" "a hyena"]}))))
   
   (testing "no changes"
-    (let [resp (app (-> (mock/request :post "/api/poll/foo")
-                        (mock/header "Authorization" "Bearer 123user1")
-                        (mock/json-body {:wait-time-seconds 1})))
+    (let [resp (app (-> (mock/request :get "/api/poll/foo?wait-time-seconds=1")
+                        (mock/header "Authorization" "Bearer 123user1")))
           #_#__ (def _resp resp)
-
           body (utils/parse-json (:body resp))]
-
       (def _body-wp-nc body)
 
       (is (= 204 (:status resp))))))
