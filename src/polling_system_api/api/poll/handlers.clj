@@ -58,20 +58,19 @@
 
 
 (defn- do-get-poll-result
-  [poll-id]
-  (if-let [poll-info (repo.poll/read-poll-info poll-id)]
-    (let [result (->> poll-info :options
-                      (mapv (fn [[option-id option-map]]
-                              (let [vote-count (repo.vote/get-vote-count option-id)]
-                                [option-id (assoc option-map :vote-count vote-count)])))
-                      (into {}))]
-      (http-response/ok (assoc poll-info :options result)))
-    (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
+  [poll-info]
+  (->> poll-info :options
+       (mapv (fn [[option-id option-map]]
+               (let [vote-count (repo.vote/get-vote-count option-id)]
+                 [option-id (assoc option-map :vote-count vote-count)])))
+       (into {})))
 
 
 (defn get-poll-result
   [{{{:keys [poll-id]} :path} :parameters :as  _req}]
-  (do-get-poll-result poll-id))
+  (if-let [poll-info (repo.poll/read-poll-info poll-id)]
+    (http-response/ok (assoc poll-info :options (do-get-poll-result poll-info)))
+    (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
 
 
 (defn subscribe-change [poll-id wait-time-seconds]
@@ -90,6 +89,13 @@
   [{{{:keys [poll-id]} :path} :parameters
     {:keys [wait-time-seconds]} :body-params
     :as  _req}]
-  (if (nil? (subscribe-change poll-id wait-time-seconds))
-    (http-response/no-content)
-    (do-get-poll-result poll-id)))
+  (let [poll-info (repo.poll/read-poll-info poll-id)]
+    (cond
+      (nil? poll-info)
+      (http-response/not-found (format "poll-id '%s' was not found" poll-id))
+
+      (nil? (subscribe-change poll-id wait-time-seconds))
+      (http-response/no-content)
+
+      :else
+      (http-response/ok (assoc poll-info :options (do-get-poll-result poll-info))))))

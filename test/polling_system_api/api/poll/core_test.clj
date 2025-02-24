@@ -230,6 +230,55 @@
       (is (= 401 (:status resp))))))
 
 
+
+(deftest get-poll
+  (testing "non existent id"
+    (let [resp (app (-> (mock/request :get "/api/poll/non-exitent-id")
+                        (mock/header "Authorization" "Bearer 123user1")))
+          #_#__ (def _resp resp)
+
+          body (utils/parse-json (:body resp))]
+
+      (def _body-gp body)
+
+      (is (= 404 (:status resp))))))
+
+
+
+(deftest wait-poll
+  (testing "non existent id"
+    (let [resp (app (-> (mock/request :post "/api/poll/non-exitent-id")
+                        (mock/header "Authorization" "Bearer 123user1")
+                        (mock/json-body {:wait-time-seconds 1})))
+          #_#__ (def _resp resp)
+
+          body (utils/parse-json (:body resp))]
+
+      (def _body-wp body)
+
+      (is (= 404 (:status resp)))))
+
+  (testing "poll is created"
+    (app (-> (mock/request :post "/api/poll")
+             (mock/header "Authorization" "Bearer 123user1")
+             (mock/json-body {:poll-id "foo"
+                              :question "What is this?"
+                              :options ["a dog" "a cat" "a hyena"]}))))
+  
+  (testing "no changes"
+    (let [resp (app (-> (mock/request :post "/api/poll/foo")
+                        (mock/header "Authorization" "Bearer 123user1")
+                        (mock/json-body {:wait-time-seconds 1})))
+          #_#__ (def _resp resp)
+
+          body (utils/parse-json (:body resp))]
+
+      (def _body-wp-nc body)
+
+      (is (= 204 (:status resp))))))
+
+
+
 (deftest edit-poll-unhappy-paths
   (testing "poll is created"
     (app (-> (mock/request :post "/api/poll")
@@ -237,6 +286,19 @@
              (mock/json-body {:poll-id "foo"
                               :question "What is this?"
                               :options ["a dog" "a cat" "a hyena"]}))))
+
+  (testing "non exitent id"
+    (let [resp (app (-> (mock/request :put "/api/poll/non-exitent-id")
+                        (mock/header "Authorization" "Bearer 123user1")
+                        (mock/json-body {:question "What is this?"
+                                         :options ["a dog" "a cat" "a hyena"]})))
+          #_#__ (def _resp resp)
+
+          body (utils/parse-json (:body resp))]
+
+      (def _body-epup-nei body)
+
+      (is (= 404 (:status resp)))))
 
 
   (testing "edit permission:"
