@@ -66,22 +66,19 @@
        (into {})))
 
 
-#_(defn get-poll-result
-  [{{{:keys [poll-id]} :path} :parameters :as  _req}]
-  (if-let [poll-info (repo.poll/read-poll-info poll-id)]
-    (http-response/ok (assoc poll-info :options (do-get-poll-result poll-info)))
-    (http-response/not-found (format "poll-id '%s' was not found" poll-id))))
-
-
 (defn subscribe-change [poll-id wait-time-seconds]
-  (let [sub-channel (a/chan 1) 
-        _ (a/sub channels/sub-root poll-id sub-channel)
-        timeout-ch (a/timeout (* wait-time-seconds 1000))
-        ;; NOTE This blocks thread, but if we have virtual threads, it doesn't affect.
-        [msg _] (a/alts!! [sub-channel timeout-ch])]
-    (a/unsub channels/sub-root poll-id sub-channel)
-    (a/close! sub-channel)
-    msg))
+  (let [timeout-ch (a/timeout (* wait-time-seconds 1000))
+        sub-channel (a/chan 1)]
+    (try
+      (a/sub channels/sub-root poll-id sub-channel)
+      (try
+        ;; NOTE This blocks thread, but if we have virtual threads, it doesn't affect to throughputs.
+        (let [[msg _] (a/alts!! [sub-channel timeout-ch])]
+          msg)
+        (finally 
+          (a/unsub channels/sub-root poll-id sub-channel)))
+      (finally
+        (a/close! sub-channel)))))
 
 
 (defn get-poll-result
