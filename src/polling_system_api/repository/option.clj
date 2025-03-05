@@ -9,7 +9,7 @@
        (map-indexed 
          (fn [idx option] 
            (let [option-id (str (random-uuid))]
-             (repo.vote/add-vote poll-id option-id)
+             (repo.vote/add-vote! poll-id option-id)
              [option-id {:vote-count 0
                          :option option
                          :rank idx}])))

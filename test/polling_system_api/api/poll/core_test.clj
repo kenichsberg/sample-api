@@ -79,8 +79,8 @@
   (testing "vote count has changed (long-poll) "
     (let [resp-result-fut (future (app (-> (mock/request :get "/api/poll/foo?wait-time-seconds=3")
                                            (mock/header "Authorization" "Bearer 123user1"))))
-          ;; NOTE Fleaky without sleep (timing - vote can win)
-          _ (Thread/sleep 10)
+          ;; NOTE Solved flaky timing issues
+          #_#__ (Thread/sleep 10)
           resp-vote (app (-> (mock/request :post (format "/api/option/%s" option1-id))
                              (mock/header "Authorization" "Bearer 123user1")))
           _ (is (= 200 (:status resp-vote)))

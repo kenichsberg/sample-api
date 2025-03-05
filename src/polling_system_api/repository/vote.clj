@@ -3,7 +3,7 @@
   (:import [java.util.concurrent ConcurrentLinkedQueue]))
 
 
-(defn add-vote
+(defn add-vote!
   [poll-id option-id]
   (swap! (:votes storage/db)
          assoc
@@ -12,7 +12,7 @@
           :queue (ConcurrentLinkedQueue.)}))
 
 
-(defn remove-vote
+(defn remove-vote!
   [option-id]
   (swap! (:votes storage/db) dissoc option-id))
 
@@ -27,7 +27,7 @@
   (.contains queue user-id))
 
 
-(defn vote-an-option
+(defn vote-an-option!
   [^ConcurrentLinkedQueue queue user-id]
   (.add queue user-id))
 

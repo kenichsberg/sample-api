@@ -1,8 +1,8 @@
 (ns polling-system-api.api.poll.handlers
   (:require [clojure.core.async :as a]
             [polling-system-api.api.auth.core :as auth]
-            [polling-system-api.repository.poll :as repo.poll]
             [polling-system-api.globals.channels :as channels]
+            [polling-system-api.repository.poll :as repo.poll]
             [polling-system-api.repository.vote :as repo.vote]
             [ring.util.http-response :as http-response]))
 
@@ -50,14 +50,14 @@
       (do
         (repo.poll/delete-poll poll-id)
         (doseq [[option-id _] (:options poll)]
-          (repo.vote/remove-vote option-id))
+          (repo.vote/remove-vote! option-id))
         (http-response/ok))
 
       :else
       (http-response/forbidden))))
 
 
-(defn- do-get-poll-result
+(defn- get-vote-counts
   [poll-info]
   (->> poll-info :options
        (mapv (fn [[option-id option-map]]
@@ -66,13 +66,23 @@
        (into {})))
 
 
-(defn subscribe-change [poll-id wait-time-seconds]
+(defn- do-get-poll-result
+  [poll-info user-id]
+  (repo.poll/add-user-viewed! (:poll-id poll-info) user-id)
+  (assoc poll-info :options (get-vote-counts poll-info)))
+
+
+(defn- poll-changed? [poll-id user-id]
+  (false? (repo.poll/user-viewed? poll-id user-id)))
+
+
+(defn- wait-poll-change!! [poll-id wait-time-seconds]
   (let [timeout-ch (a/timeout (* wait-time-seconds 1000))
         sub-channel (a/chan 1)]
     (try
       (a/sub channels/sub-root poll-id sub-channel)
       (try
-        ;; NOTE This blocks thread, but if we have virtual threads, it doesn't affect to throughputs.
+        ;; NOTE This blocks a thread, but if we have virtual threads, it doesn't affect to throughputs.
         (let [[msg _] (a/alts!! [sub-channel timeout-ch])]
           msg)
         (finally 
@@ -84,22 +94,28 @@
 (defn get-poll-result
   [{{{:keys [poll-id]} :path
      {:keys [wait-time-seconds]} :query} :parameters
-    :as  _req}]
+    :as  req}]
   (let [wait-time-seconds (cond
                             (nil? wait-time-seconds) 20
                             (< 30 wait-time-seconds) 30
                             :else wait-time-seconds)
-        poll-info (repo.poll/read-poll-info poll-id)]
+        poll-info (repo.poll/read-poll-info poll-id)
+        user-id (auth/get-user-id req)]
 
     (cond
       (nil? poll-info)
       (http-response/not-found (format "poll-id '%s' was not found" poll-id))
 
       (zero? wait-time-seconds)
-      (http-response/ok (assoc poll-info :options (do-get-poll-result poll-info)))
+      (http-response/ok (do-get-poll-result poll-info user-id))
+      
+      (poll-changed? poll-id user-id)
+      (http-response/ok (do-get-poll-result poll-info user-id))
 
-      (nil? (subscribe-change poll-id wait-time-seconds))
-      (http-response/no-content)
+      (nil? (wait-poll-change!! poll-id wait-time-seconds))
+      (if (poll-changed? poll-id user-id)
+        (http-response/ok (do-get-poll-result poll-info user-id))
+        (http-response/no-content))
 
       :else
-      (http-response/ok (assoc poll-info :options (do-get-poll-result poll-info))))))
+      (http-response/ok (do-get-poll-result poll-info user-id)))))
