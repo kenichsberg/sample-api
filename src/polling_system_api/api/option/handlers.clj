@@ -2,7 +2,6 @@
   (:require [clojure.core.async :as a]
             [polling-system-api.api.auth.core :as auth]
             [polling-system-api.globals.channels :as channels]
-            [polling-system-api.repository.poll :as repo.poll]
             [polling-system-api.repository.vote :as repo.vote]
             [ring.util.http-response :as http-response]))
 
@@ -21,8 +20,7 @@
 
       :else
       (do
-        (repo.vote/vote-an-option! queue user-id)
-        (repo.poll/new-user-viewed-queue! poll-id)
+        (repo.vote/vote-an-option queue user-id)
         (a/>!! channels/pub {:poll-id poll-id 
                              :message :poll-changed})
         (http-response/ok)))))

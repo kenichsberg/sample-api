@@ -2,7 +2,7 @@
   (:require [clojure.core.async :as a]))
 
 
-(def pub (a/chan))
+(def pub (a/chan 10000))
 
 (def sub-root (a/pub pub :poll-id (fn [_] (a/sliding-buffer 1))))
 

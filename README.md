@@ -87,7 +87,6 @@ In memory db stores data as follows:
                    {<option-id> {:vote-count <int>
                                  :option <option>
                                  :rank <int>}
-                   :user-viewed ^ConcurrentLinkedQueue [<user-id> ...]
                     ...}}
          ...})
 
@@ -221,14 +220,6 @@ CREATE TABLE votes (
   option_id UUID NOT NULL REFERENCES options,
   option_id_unique_key UUID REFERENCES options, 
   UNIQUE (user_id, poll_id, option_id_unique_key)
-)
-
-CREATE TABLE votes_viewed (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users,
-  --poll_id UUID NOT NULL REFERENCES polls,
-  vote_id UUID NOT NULL REFERENCES votes,
-  UNIQUE (user_id, vote_id)
 )
 
 
